@@ -75,6 +75,7 @@ steps.df[, "sMedian"]  <-
     ddply(data.df, .(date), summarize, sMedian=median(steps))[,"sMedian"];
 
 summary(steps.df);
+
 ```
 
 ```{r}
