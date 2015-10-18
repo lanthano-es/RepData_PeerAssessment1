@@ -328,7 +328,7 @@ completed.data.df$date<- as.Date(completed.data.df$date, "%Y-%m-%d");
 completed.data.df$weekdays <- as.factor(weekdays(completed.data.df$date));
 completed.data.df$weekenddays<-FALSE;
 
-indexWeekenddays <- completed.data.df$weekdays %in% c("sÃ¡bado","domingo");
+indexWeekenddays <- completed.data.df$weekdays %in% c("sábado","domingo");
 completed.data.df[indexWeekenddays,]$weekenddays<-TRUE;
 ```
 
