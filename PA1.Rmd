@@ -1,0 +1,236 @@
+---
+title: "PA1.Rmd"
+output: html_document
+---
+
+COURSE: Reproducible Research  
+Practice: Peer Assessment 1
+Student: lanthano, fgonzalezalonso@outlook.es  
+date: 20151018 
+
+NOTE: My level of English is low, Excuse me for the mistakes will commit 
+in the comments.  
+
+Dataset: 
+[Activity monitoring data](https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip)   
+
+## Loading librarys
+```{r}
+library(plyr);
+library(ggplot2);
+```
+
+
+
+## Loading and preprocessing the data
+
+1. Download the data file:
+```{r}
+setwd("E:/practica");
+fURI <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip";
+setInternet2(use = TRUE);
+download.file(fURI, destfile = "./data.zip");
+unzip("./data.zip"); 
+```
+**Note:** Use *setInternet2(use = TRUE)* to avoid the download.file 
+error in markdown.
+
+
+2. Loading the data in data frame
+
+```{r}
+raw.data.df<-read.csv("./activity.csv");
+str(raw.data.df);
+summary(raw.data.df);
+```
+
+3. Processing the data into a format suitable for your analysis 
+(transform date col in a date format)
+```{r}
+data.df <-raw.data.df;
+data.df$date<- as.Date(data.df$date, "%Y-%m-%d");
+str(data.df);
+summary(data.df);
+```
+
+4. Clean NA inputs (rows)
+```{r}
+data.df <- data.df[complete.cases(data.df),];
+summary(data.df);
+```
+
+## Processing the data
+
+### 1. Mean of total number of steps taken per day:
+
+```{r}
+steps.df <- ddply(data.df, .(date), summarize, sTotal=sum(steps));
+
+steps.df[, "sMean"] <- 
+    ddply(data.df, .(date), summarize, sMean=mean(steps))[,"sMean"];
+
+steps.df[, "sMedian"]  <- 
+    ddply(data.df, .(date), summarize, sMedian=median(steps))[,"sMedian"];
+
+summary(steps.df);
+```
+
+```{r}
+hist(steps.df$sTotal, 
+     main = "Histogram of Total Steps", xlab="Total Steps", ylab="Frequency");
+```
+
+The mean of total steps for day is: 
+```{r}
+mean(steps.df$sTotal);
+```
+  
+The median of total steps for day is:
+```{r}
+median(steps.df$sTotal);
+```   
+
+
+### 2. Average daily activity pattern:
+```{r}
+ada.df <- ddply(data.df, .(interval), summarize, sMean=mean(steps));
+plot(ada.df$interval, ada.df$sMean,  type = "l", 
+     main = "Average daily activity", xlab="Interval", ylab="Mean");
+
+```
+
+The range wich contains the maximum number of steps is:
+
+```{r}
+ada.df$interval[ada.df$sMean== max(ada.df$sMean)];
+```
+
+#### Imputing missing values
+
+Note that there are a number of days/intervals where there are missing values
+(coded as NA).   
+
+The presence of missing days may introduce bias into some calculations or 
+summaries of the data.   
+Calculate and report the total number of missing values in the dataset (i.e. the
+total number of rows with NAs)
+
+The total number of rows with NAs is:
+```{r}
+narows<- nrow(raw.data.df)-nrow(na.omit(raw.data.df))
+narows;
+```
+
+Devise a strategy for filling in all of the missing values in the dataset. 
+The strategy does not need to be sophisticated. For example, you could use the
+mean/median for that day, or the mean for that 5-minute interval, etc.
+
+Create a new dataset that is equal to the original dataset but with the missing 
+data filled in.
+
+```{r}
+completed.data.df<-raw.data.df;
+sMeanTemp<- ada.df[ada.df$interval %in% unique(completed.data.df$interval[indexNA]),c("interval","sMean")];
+completed.data.df<-merge(completed.data.df, ada.df, by="interval");
+indexNA<-is.na(completed.data.df$steps);
+completed.data.df$steps[indexNA]<-completed.data.df$sMean[indexNA];
+completed.data.df<-completed.data.df[,-4];
+```
+
+Make a histogram of the total number of steps taken each day and Calculate 
+and report the mean and median total number of steps taken per day. 
+Do these values differ from the estimates from the first part of the assignment? 
+What is the impact of imputing missing data on the estimates of the total daily 
+number of steps?
+
+```{r}
+completed.steps.df <- 
+    ddply(completed.data.df, .(date), summarize, sTotal=sum(steps));
+
+completed.steps.df[, "sMean"] <- 
+    ddply(completed.data.df, .(date), summarize, sMean=mean(steps))[,"sMean"];
+
+completed.steps.df[, "sMedian"]  <- 
+    ddply(completed.data.df, .(date), summarize, sMedian=median(steps))[,"sMedian"];
+
+summary(completed.steps.df);
+```
+
+```{r}
+hist(completed.steps.df$sTotal, 
+     main = "Histogram of Total Steps (completed data)", xlab="Total Steps", 
+     ylab="Frequency");
+```
+
+The mean of total steps for day (completed data) is: 
+```{r}
+mean(completed.steps.df$sTotal);
+```
+  
+The median of total steps for day (completed data) is:
+```{r}
+median(completed.steps.df$sTotal);
+```   
+
+
+### 3. Differences in activity patterns between weekdays and weekends:
+
+For this part the weekdays() function may be of some help here. Use the dataset 
+with the filled-in missing values for this part.
+
+1.  Create a new factor variable in the dataset with two levels – “weekday” and
+“weekend” indicating whether a given date is a weekday or weekend day.
+
+
+```{r}
+completed.data.df$date<- as.Date(completed.data.df$date, "%Y-%m-%d");
+completed.data.df$weekdays <- as.factor(weekdays(completed.data.df$date));
+completed.data.df$weekenddays<-FALSE;
+
+indexWeekenddays <- completed.data.df$weekdays %in% c("sábado","domingo");
+completed.data.df[indexWeekenddays,]$weekenddays<-TRUE;
+
+```
+
+2. Make a panel plot containing a time series plot (i.e. type = "l") of the 
+5-minute interval (x-axis) and the average number of steps taken, averaged 
+across all weekday days or weekend days (y-axis). See the README file in the 
+GitHub repository to see an example of what this plot should look like using 
+simulated data.
+
+```{r}
+completed.ada.df <- 
+    ddply(completed.data.df, .(interval,weekenddays), summarize, sMean=mean(steps));
+
+plot(
+    x=completed.ada.df$interval[!completed.ada.df$weekenddays], 
+	y=completed.ada.df$sMean[!completed.ada.df$weekenddays],
+	ylim=c(0,1.1*max(completed.ada.df$sMean)), 
+	col='black', 
+	type='l',
+	main='Mean daily activity by weekend vs laboral days', 
+    xlab='Interval',
+	ylab='sMean',
+	xaxt='n');
+
+points(
+	x=completed.ada.df$interval[completed.ada.df$weekenddays], 
+	y=completed.ada.df$sMean[completed.ada.df$weekenddays],
+	col='blue',
+	type='l');
+
+legend("topright", pch = 1, 
+       col = c("black", "blue"), 
+       legend = c("No Weekend", "Week End"));
+
+```
+
+
+
+
+
+
+
+
+
+
