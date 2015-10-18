@@ -4,7 +4,7 @@ output: html_document
 ---
 
 COURSE: Reproducible Research  
-Practice: Peer Assessment 1
+Practice: Peer Assessment 1   
 Student: lanthano, fgonzalezalonso@outlook.es  
 date: 20151018 
 
@@ -223,8 +223,15 @@ legend("topright", pch = 1,
        col = c("black", "blue"), 
        legend = c("No Weekend", "Week End"));
 
-```
 
+g <- ggplot(completed.ada.df, aes(interval, sMean)) 
+g <- g + geom_point() 
+g <- g + facet_grid(. ~ weekenddays) 
+g <- g + geom_smooth(method = "lm")
+g <- g + theme_bw()
+g <- g + labs(title = expression("Mean daily activity by weekend"))
+print(g)
+```
 
 
 
