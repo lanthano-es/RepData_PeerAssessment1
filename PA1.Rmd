@@ -1,5 +1,5 @@
 ---
-title: "PA1.Rmd"
+title: "PA1_template.Rmd"
 output: html_document
 ---
 
@@ -14,15 +14,19 @@ in the comments.
 Dataset: 
 [Activity monitoring data](https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip)   
 
-## Loading librarys
+
+
+
+
+## Loading and preprocessing the data
+
+0. Loading librarys
+
 ```{r}
 library(plyr);
 library(ggplot2);
 ```
 
-
-
-## Loading and preprocessing the data
 
 1. Download the data file:
 ```{r}
@@ -59,9 +63,7 @@ data.df <- data.df[complete.cases(data.df),];
 summary(data.df);
 ```
 
-## Processing the data
-
-### 1. Mean of total number of steps taken per day:
+## What is mean total number of steps taken per day?
 
 ```{r}
 steps.df <- ddply(data.df, .(date), summarize, sTotal=sum(steps));
@@ -91,7 +93,8 @@ median(steps.df$sTotal);
 ```   
 
 
-### 2. Average daily activity pattern:
+## What is the average daily activity pattern?
+
 ```{r}
 ada.df <- ddply(data.df, .(interval), summarize, sMean=mean(steps));
 plot(ada.df$interval, ada.df$sMean,  type = "l", 
@@ -105,7 +108,7 @@ The range wich contains the maximum number of steps is:
 ada.df$interval[ada.df$sMean== max(ada.df$sMean)];
 ```
 
-#### Imputing missing values
+## Imputing missing values
 
 Note that there are a number of days/intervals where there are missing values
 (coded as NA).   
@@ -173,13 +176,13 @@ median(completed.steps.df$sTotal);
 ```   
 
 
-### 3. Differences in activity patterns between weekdays and weekends:
+## Are there differences in activity patterns between weekdays and weekends?
 
 For this part the weekdays() function may be of some help here. Use the dataset 
 with the filled-in missing values for this part.
 
-1.  Create a new factor variable in the dataset with two levels – “weekday” and
-“weekend” indicating whether a given date is a weekday or weekend day.
+1.  Create a new factor variable in the dataset with two levels - "weekday" and
+"weekend" indicating whether a given date is a weekday or weekend day.
 
 
 ```{r}
@@ -231,13 +234,7 @@ g <- g + geom_smooth(method = "lm")
 g <- g + theme_bw()
 g <- g + labs(title = expression("Mean daily activity by weekend"))
 print(g)
+
 ```
-
-
-
-
-
-
-
 
 
